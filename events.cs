@@ -19,6 +19,8 @@ namespace HardwareMonitor
         public string Value1 { get; set; }
         public string EventName2 { get; set; }
         public string Value2 { get; set; }
+        public string EventName3 { get; set; }
+        public string Value3 { get; set; }
         //public DateTime Local_TimeStamp { get; set; }
         public DateTime UTC_TimeStamp { get; set; }
 

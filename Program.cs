@@ -15,6 +15,7 @@ using HardwareMonitor;
 using MongoDB.Bson.Serialization.Conventions;
 using LibreHardwareMonitor.Hardware.Cpu;
 using System.Text.RegularExpressions;
+using LibreHardwareMonitor.Hardware.Storage;
 
 namespace Hardware_Monitor
 { 
@@ -26,6 +27,8 @@ namespace Hardware_Monitor
         string CPU_Temperatura_value;
         string CPU_Load;
         string CPU_Load_value;
+        string Memory_Load;
+        string Memory_Load_Value;
         //DateTime localDateTime = DateTime.Now;
         //DateTime utcDateDateTime = DateTime.UtcNow;
 
@@ -100,6 +103,8 @@ namespace Hardware_Monitor
                 }
                 foreach (ISensor sensor in hardware.Sensors)
                 {
+                    //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, sensor.Name, sensor.Value);
+
                     if (sensor.SensorType == SensorType.Temperature && sensor.Name == "Core Average")
                     {
                         CPU_Temperatura = sensor.Name.ToString() + "Temperature in Celsius";
@@ -112,6 +117,12 @@ namespace Hardware_Monitor
                         CPU_Load = sensor.Name.ToString();
                         CPU_Load_value = sensor.Value.ToString();
                         //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, sensor.Name, sensor.Value);
+                    }
+                    if (sensor.SensorType == SensorType.Load && sensor.Name == "Memory")
+                    {
+                        Memory_Load = sensor.Name.ToString();
+                        Memory_Load_Value = sensor.Value.ToString();
+                        //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, Memory_Load, Memory_Load_Value);
                     }
                 }
             }
@@ -144,6 +155,8 @@ namespace Hardware_Monitor
             float CPU_Load_AVG = 0;
             float CPU_Temprature_Sum = 0;
             float CPU_Load_Sum = 0;
+            float Momory_Load_Average = 0;
+            float Momory_Load_Sum = 0;
 
             Program Monitoring = new Program();
             string host = Dns.GetHostName();
@@ -155,7 +168,7 @@ namespace Hardware_Monitor
                 Match match = Regex.Match(ip.AddressList[i].ToString(), @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"); //This is to fing the IPV4 address inside the ip.AddressList[]
                 if (match.Success)
                 {
-                    Console.WriteLine("IP Address =" + match.Value);
+                    //Console.WriteLine("IP Address = " + match.Value);
                     IP_Address = ip.AddressList[i].ToString();
                 }
             }            
@@ -163,7 +176,7 @@ namespace Hardware_Monitor
 
             // Getting ip address using host name 
             Console.WriteLine("\t Host name: {0}", host);
-            Console.WriteLine("\t IP Address: {0}", ip.AddressList[3].ToString());
+            Console.WriteLine("\t IP Address: {0}", IP_Address);
             Console.WriteLine("\t MAC Address: {0}", mac_Address);            
 
             var uri = "mongodb+srv://MABRIO:Toco2273@cluster0.ne2gv.mongodb.net/";
@@ -178,17 +191,23 @@ namespace Hardware_Monitor
                 float CPU_Temprature = float.Parse(Monitoring.CPU_Temperatura_value);
                 CPU_Temprature_Sum = CPU_Temprature_Sum + CPU_Temprature;
                 float CPU_Load = float.Parse(Monitoring.CPU_Load_value);
-                CPU_Load_Sum = CPU_Load_Sum + CPU_Temprature;
+                CPU_Load_Sum = CPU_Load_Sum + CPU_Load;
+                float Mem_Load = float.Parse(Monitoring.Memory_Load_Value);
+                Momory_Load_Sum = Momory_Load_Sum + Mem_Load;
+
 
                 if (Count == 10)
                 {
                     CPU_Load_AVG = CPU_Load_Sum / 10;
                     CPU_Temprature_Avg = CPU_Temprature_Sum / 10;
+                    Momory_Load_Average = Momory_Load_Sum / 10;
                     // Seting the trashold for CPU utilization and temperatura
-                    if (CPU_Temprature_Avg > 50 || CPU_Load_AVG > 57)
+                    if (CPU_Temprature_Avg > 65 || CPU_Load_AVG > 57 || Momory_Load_Average > 90)
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", CPU_Temprature_Avg);
+                        Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", Momory_Load_Average);
+                        //Console.WriteLine("CPU Temperatura = " + CPU_Temprature_Avg);
                         var client = new MongoClient(uri);
                         var db = client.GetDatabase("System_Events_Monitor");
                         var coll = db.GetCollection<Events>("events");
@@ -205,6 +224,8 @@ namespace Hardware_Monitor
                                 Value1 = Monitoring.CPU_Temperatura_value,
                                 EventName2 = Monitoring.CPU_Load,
                                 Value2 = Monitoring.CPU_Load_value,
+                                EventName3 = Monitoring.Memory_Load,
+                                Value3 = Monitoring.Memory_Load_Value,
                                 UTC_TimeStamp = DateTime.UtcNow,
                             }
                         };
@@ -212,7 +233,7 @@ namespace Hardware_Monitor
                         // To confirm if the record was savd in the DB.
                         foreach (var evt in events)
                         {
-                            Console.WriteLine(evt.Id);
+                            Console.WriteLine("Events sent to Cloud DB, event ID = " + evt.Id);
                         }
                     }
                     Count = 0;
