@@ -15,12 +15,14 @@ namespace HardwareMonitor
         public string MAC_Address { get; set; }
         public string Manufacturer_Model { get; set; }
         public string CPU_Model { get; set; }
-        public string EventName1 { get; set; }
-        public string Value1 { get; set; }
-        public string EventName2 { get; set; }
-        public string Value2 { get; set; }
-        public string EventName3 { get; set; }
-        public string Value3 { get; set; }
+        public string CPU_Temp_Event { get; set; }
+        public string CPU_Temp_Value { get; set; }
+        public string CPU_Load_Event { get; set; }
+        public string CPU_Load_Value { get; set; }
+        public string Memory_Load_Event { get; set; }
+        public string Memory_Load_Value { get; set; }
+        public string Disk_Load_Event { get; set; }
+        public string Disk_Load_Value { get; set; }
         //public DateTime Local_TimeStamp { get; set; }
         public DateTime UTC_TimeStamp { get; set; }
 

@@ -16,6 +16,8 @@ using MongoDB.Bson.Serialization.Conventions;
 using LibreHardwareMonitor.Hardware.Cpu;
 using System.Text.RegularExpressions;
 using LibreHardwareMonitor.Hardware.Storage;
+using System.Net.NetworkInformation;
+using System.Collections;
 
 namespace Hardware_Monitor
 { 
@@ -29,6 +31,10 @@ namespace Hardware_Monitor
         string CPU_Load_value;
         string Memory_Load;
         string Memory_Load_Value;
+        string Disk_Hardware;
+        string Disk_Load_Value;
+        string[,] Disks = { { "", "" }, { "", "" }, { "", "" } };
+        int disk_Nbr = 0;
         //DateTime localDateTime = DateTime.Now;
         //DateTime utcDateDateTime = DateTime.UtcNow;
 
@@ -81,21 +87,19 @@ namespace Hardware_Monitor
 
             foreach (IHardware hardware in computer.Hardware)
             {
+                //Console.WriteLine("Hardware: {0}, {1}", hardware.HardwareType, hardware.Name);  //Storage,
                 if (hardware.HardwareType == HardwareType.Motherboard )
                 {
-                    //Console.WriteLine("Hardware: {0}, {1}", hardware.HardwareType, hardware.Name);
                     Manufacturer_Model = hardware.Name.ToString();
                 }
                 if (hardware.HardwareType == HardwareType.Cpu)
                 {
-                    //Console.WriteLine("Hardware: {0}, {1}", hardware.HardwareType, hardware.Name);
                     CPU_Model = hardware.Name.ToString();
                 }
 
                 foreach (IHardware subhardware in hardware.SubHardware)
                 {
                     //Console.WriteLine("\tSubhardware: {0}", subhardware.Name);
-
                     foreach (ISensor sensor in subhardware.Sensors)
                     {
                         //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, sensor.Name, sensor.Value);
@@ -109,25 +113,96 @@ namespace Hardware_Monitor
                     {
                         CPU_Temperatura = sensor.Name.ToString() + "Temperature in Celsius";
                         CPU_Temperatura_value = sensor.Value.ToString();
-                        //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, sensor.Name, sensor.Value);
                     }
-                    //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, sensor.Name, sensor.Value);
                     if (sensor.SensorType == SensorType.Load && sensor.Name == "CPU Total")
                     {
                         CPU_Load = sensor.Name.ToString();
                         CPU_Load_value = sensor.Value.ToString();
-                        //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, sensor.Name, sensor.Value);
                     }
                     if (sensor.SensorType == SensorType.Load && sensor.Name == "Memory")
                     {
                         Memory_Load = sensor.Name.ToString();
                         Memory_Load_Value = sensor.Value.ToString();
-                        //Console.WriteLine("\t{0} {1}, value:  {2}", sensor.SensorType, Memory_Load, Memory_Load_Value);
+                    }
+                    if (hardware.HardwareType == HardwareType.Storage && sensor.SensorType == SensorType.Load && sensor.Name == "Used Space")
+                    {
+                        int count = 0;
+                        int flag = 0;
+                        string temp_Disk_Hardware = "";
+                        string temo_Disk_Load_Value = "";
+                        foreach (IHardware DSK_hardware in computer.Hardware)
+                        {
+                            if (DSK_hardware != null && DSK_hardware.HardwareType == HardwareType.Storage)
+                            {
+                                Disk_Hardware = hardware.Name.ToString();
+                                Disk_Load_Value = sensor.Value.ToString();
+                                if (Disk_Hardware != temp_Disk_Hardware && disk_Nbr == 0)
+                                {
+                                    Disks[0, 0] = Disk_Hardware;
+                                    Disks[0, 1] = Disk_Load_Value;
+                                    temp_Disk_Hardware = Disk_Hardware;
+                                    temo_Disk_Load_Value = Disk_Load_Value;
+                                    disk_Nbr++;
+                                    Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
+                                }
+                                if (Disk_Hardware != temp_Disk_Hardware)
+                                {
+                                    Disks[disk_Nbr, 0] = Disk_Hardware;
+                                    Disks[disk_Nbr, 1] = Disk_Load_Value;
+                                    temp_Disk_Hardware = Disk_Hardware;
+                                    temo_Disk_Load_Value = Disk_Load_Value;
+                                    disk_Nbr++;
+                                    Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
+                                }
+                            }
+                        }
+                        if (disk_Nbr > 2) disk_Nbr = 0;
                     }
                 }
             }
+            try
+            {
+                float Highest_Disk_Usage = float.Parse(Disks[0, 1]);
+                for (int i = 1; i < Disks.GetLength(1); i++)
+                {
+                    if (float.Parse(Disks[1, 1]) > Highest_Disk_Usage)
+                    {
+                        Highest_Disk_Usage = float.Parse(Disks[1, 1]);
+                    }
+                }
+            }
+            catch (Exception)
+            {
 
+                throw;
+            }
             computer.Close();
+        }
+        public static IPAddress GetIPAddress(string hostName)
+        {
+            Ping ping = new Ping();
+            var replay = ping.Send(hostName);
+
+            if (replay.Status == IPStatus.Success)
+            {
+                return replay.Address;
+            }
+            return null;
+        }
+        public static string GetIP4Address(string hostName)
+        {
+            string IP4Address = String.Empty;
+
+            foreach (IPAddress IPA in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                //Console.WriteLine("\t{0}", IPA.ToString());
+                if (IPA.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    IP4Address = IPA.ToString();
+                    break;
+                }
+            }
+            return IP4Address;
         }
         static String getMAC_Address(string ipAddr)
         {
@@ -139,7 +214,6 @@ namespace Hardware_Monitor
             if (SendARP(BitConverter.ToInt32(dst.GetAddressBytes(), 0), 0, macAddr, ref macAddrLen) != 0) {                 //throw new InvalidOperationException("SendARP failed.");
                 Console.WriteLine("SendARP failed.");
             }
-
             string[] str = new string[(int)macAddrLen];
             for (int i = 0; i < macAddrLen; i++)
                 str[i] = macAddr[i].ToString("x2");
@@ -147,7 +221,6 @@ namespace Hardware_Monitor
             String MAC_Address = string.Join("-", str);
             return MAC_Address;
         }
-
         static void Main(string[] args)
         {
             int Count = 0;
@@ -159,19 +232,20 @@ namespace Hardware_Monitor
             float Momory_Load_Sum = 0;
 
             Program Monitoring = new Program();
-            string host = Dns.GetHostName();
-            IPHostEntry ip = Dns.GetHostEntry(host);                            // Getting ip address using host name
-            string IP_Address = null;                                           // used to pmake the IP_Address visible outside the for loop.
-            for (int i = 0; i < 5; i++)
-            {
-                //Console.WriteLine(ip.AddressList[i].ToString());
-                Match match = Regex.Match(ip.AddressList[i].ToString(), @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"); //This is to fing the IPV4 address inside the ip.AddressList[]
-                if (match.Success)
-                {
-                    //Console.WriteLine("IP Address = " + match.Value);
-                    IP_Address = ip.AddressList[i].ToString();
-                }
-            }            
+            string host = System.Net.Dns.GetHostName();
+            //IPHostEntry ip = System.Net.Dns.GetHostEntry(host);               // Getting ip address using host name
+            //string IP_Address = null;                                         // used to make the IP_Address visible outside the for loop.
+            string IP_Address = GetIP4Address(host);
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    Console.WriteLine(ip.AddressList[i].ToString());
+            //    Match match = Regex.Match(ip.AddressList[i].ToString(), @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"); //This is to fing the IPV4 address inside the ip.AddressList[]
+            //    if (match.Success)
+            //    {
+            //        //Console.WriteLine("IP Address = " + match.Value);
+            //        IP_Address = ip.AddressList[i].ToString();
+            //    }
+            //}            
             string mac_Address = getMAC_Address(IP_Address);
 
             // Getting ip address using host name 
@@ -179,7 +253,8 @@ namespace Hardware_Monitor
             Console.WriteLine("\t IP Address: {0}", IP_Address);
             Console.WriteLine("\t MAC Address: {0}", mac_Address);            
 
-            var uri = "mongodb+srv://MABRIO:Toco2273@cluster0.ne2gv.mongodb.net/";
+            var uri = "mongodb+srv://MABRIO:Toco2273@cluster0.ne2gv.mongodb.net/"; // I need to hid it
+
             var pack = new ConventionPack { new CamelCaseElementNameConvention() };
             ConventionRegistry.Register("elementNameConvention", pack, x => true);
 
@@ -201,7 +276,7 @@ namespace Hardware_Monitor
                     CPU_Load_AVG = CPU_Load_Sum / 10;
                     CPU_Temprature_Avg = CPU_Temprature_Sum / 10;
                     Momory_Load_Average = Momory_Load_Sum / 10;
-                    // Seting the trashold for CPU utilization and temperatura
+                    // Seting the trashold for CPU utilization, temperatura and memory
                     if (CPU_Temprature_Avg > 65 || CPU_Load_AVG > 57 || Momory_Load_Average > 90)
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
@@ -213,19 +288,21 @@ namespace Hardware_Monitor
                         var coll = db.GetCollection<Events>("events");
                         var events = new[]
                         {
-                            new Events 
+                            new Events
                             {
                                 HostName = host,
                                 IP_Address = IP_Address,
                                 MAC_Address = mac_Address,
                                 Manufacturer_Model =  Monitoring.Manufacturer_Model,
                                 CPU_Model = Monitoring.CPU_Model,
-                                EventName1 = Monitoring.CPU_Temperatura,
-                                Value1 = Monitoring.CPU_Temperatura_value,
-                                EventName2 = Monitoring.CPU_Load,
-                                Value2 = Monitoring.CPU_Load_value,
-                                EventName3 = Monitoring.Memory_Load,
-                                Value3 = Monitoring.Memory_Load_Value,
+                                CPU_Temp_Event = Monitoring.CPU_Temperatura,
+                                CPU_Temp_Value = Monitoring.CPU_Temperatura_value,
+                                CPU_Load_Event = Monitoring.CPU_Load,
+                                CPU_Load_Value = Monitoring.CPU_Load_value,
+                                Memory_Load_Event = Monitoring.Memory_Load,
+                                Memory_Load_Value = Monitoring.Memory_Load_Value,
+                                Disk_Load_Event = Monitoring.Disk_Hardware,
+                                Disk_Load_Value = Monitoring.Disk_Load_Value,
                                 UTC_TimeStamp = DateTime.UtcNow,
                             }
                         };
