@@ -18,6 +18,8 @@ using System.Text.RegularExpressions;
 using LibreHardwareMonitor.Hardware.Storage;
 using System.Net.NetworkInformation;
 using System.Collections;
+using Microsoft.Extensions.Configuration;
+
 
 namespace Hardware_Monitor
 { 
@@ -231,6 +233,12 @@ namespace Hardware_Monitor
             float Momory_Load_Average = 0;
             float Momory_Load_Sum = 0;
 
+            IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+            configurationBuilder.AddJsonFile("secrets.json");
+            IConfiguration configuration = configurationBuilder.Build();
+            string connectionString = configuration.GetConnectionString("DefaultConnection");
+            var url = connectionString;
+
             Program Monitoring = new Program();
             string host = System.Net.Dns.GetHostName();
             //IPHostEntry ip = System.Net.Dns.GetHostEntry(host);               // Getting ip address using host name
@@ -251,9 +259,7 @@ namespace Hardware_Monitor
             // Getting ip address using host name 
             Console.WriteLine("\t Host name: {0}", host);
             Console.WriteLine("\t IP Address: {0}", IP_Address);
-            Console.WriteLine("\t MAC Address: {0}", mac_Address);            
-
-            var uri = "mongodb+srv://MABRIO:Toco2273@cluster0.ne2gv.mongodb.net/"; // I need to hid it
+            Console.WriteLine("\t MAC Address: {0}", mac_Address);
 
             var pack = new ConventionPack { new CamelCaseElementNameConvention() };
             ConventionRegistry.Register("elementNameConvention", pack, x => true);
@@ -270,20 +276,19 @@ namespace Hardware_Monitor
                 float Mem_Load = float.Parse(Monitoring.Memory_Load_Value);
                 Momory_Load_Sum = Momory_Load_Sum + Mem_Load;
 
-
                 if (Count == 10)
                 {
                     CPU_Load_AVG = CPU_Load_Sum / 10;
                     CPU_Temprature_Avg = CPU_Temprature_Sum / 10;
                     Momory_Load_Average = Momory_Load_Sum / 10;
                     // Seting the trashold for CPU utilization, temperatura and memory
-                    if (CPU_Temprature_Avg > 65 || CPU_Load_AVG > 57 || Momory_Load_Average > 90)
+                    if (CPU_Temprature_Avg > 60 || CPU_Load_AVG > 55 || Momory_Load_Average > 80)
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", CPU_Temprature_Avg);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", Momory_Load_Average);
                         //Console.WriteLine("CPU Temperatura = " + CPU_Temprature_Avg);
-                        var client = new MongoClient(uri);
+                        var client = new MongoClient(url);
                         var db = client.GetDatabase("System_Events_Monitor");
                         var coll = db.GetCollection<Events>("events");
                         var events = new[]
