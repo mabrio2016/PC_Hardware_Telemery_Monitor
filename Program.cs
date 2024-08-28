@@ -233,8 +233,8 @@ namespace Hardware_Monitor
             float CPU_Load_AVG = 0;
             float CPU_Temprature_Sum = 0;
             float CPU_Load_Sum = 0;
-            float Momory_Load_Average = 0;
-            float Momory_Load_Sum = 0;
+            float Memory_Load_Average = 0;
+            float Memory_Load_Sum = 0;
 
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("secrets.json");
@@ -264,21 +264,21 @@ namespace Hardware_Monitor
                 float CPU_Load = float.Parse(Monitoring.CPU_Load_value);
                 CPU_Load_Sum = CPU_Load_Sum + CPU_Load;
                 float Mem_Load = float.Parse(Monitoring.Memory_Load_Value);
-                Momory_Load_Sum = Momory_Load_Sum + Mem_Load;
+                Memory_Load_Sum = Memory_Load_Sum + Mem_Load;
 
                 if (Count == 10)
                 {
                     CPU_Load_AVG = CPU_Load_Sum / 10;
                     CPU_Temprature_Avg = CPU_Temprature_Sum / 10;
-                    Momory_Load_Average = Momory_Load_Sum / 10;
+                    Memory_Load_Average = Memory_Load_Sum / 10;
                     // Seting the trashold for CPU utilization, temperatura and memory
-                    if (CPU_Temprature_Avg > 60 || CPU_Load_AVG > 55 || Momory_Load_Average > 80)
+                    if (CPU_Temprature_Avg > 60 || CPU_Load_AVG > 55 || Memory_Load_Average > 80 || float.Parse(Monitoring.Disk_Load_Value) > 80)
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", CPU_Temprature_Avg);
-                        Console.WriteLine("\t{0}, value:  {1}", "Memory Utilization", Momory_Load_Average);
-                        //Console.WriteLine("\t{0}, value:  {1}", "Disk Utilization", Highest_Disk_Usage);
-                        //Console.WriteLine("CPU Temperatura = " + CPU_Temprature_Avg);
+                        Console.WriteLine("\t{0}, value:  {1}", "Memory Utilization", Memory_Load_Average);
+                        Console.WriteLine("\t{0} {1}, {2}", "Disk Utilization", Monitoring.Disk_Hardware, Monitoring.Disk_Load_Value);
+
                         var client = new MongoClient(url);
                         var db = client.GetDatabase("System_Events_Monitor");
                         var coll = db.GetCollection<Events>("events");
@@ -312,7 +312,7 @@ namespace Hardware_Monitor
                     Count = 0;
                     CPU_Temprature_Sum = 0;
                     CPU_Load_Sum = 0;
-                    Momory_Load_Sum = 0;
+                    Memory_Load_Sum = 0;
                 }
             }
 
