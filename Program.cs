@@ -145,7 +145,7 @@ namespace Hardware_Monitor
                                     temp_Disk_Hardware = Disk_Hardware;
                                     temo_Disk_Load_Value = Disk_Load_Value;
                                     disk_Nbr++;
-                                    Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
+                                    //Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
                                 }
                                 if (Disk_Hardware != temp_Disk_Hardware)
                                 {
@@ -154,7 +154,7 @@ namespace Hardware_Monitor
                                     temp_Disk_Hardware = Disk_Hardware;
                                     temo_Disk_Load_Value = Disk_Load_Value;
                                     disk_Nbr++;
-                                    Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
+                                    //Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
                                 }
                             }
                         }
@@ -165,13 +165,16 @@ namespace Hardware_Monitor
             try
             {
                 float Highest_Disk_Usage = float.Parse(Disks[0, 1]);
+                Disk_Hardware = Disks[0, 0];
                 for (int i = 1; i < Disks.GetLength(1); i++)
                 {
                     if (float.Parse(Disks[1, 1]) > Highest_Disk_Usage)
                     {
                         Highest_Disk_Usage = float.Parse(Disks[1, 1]);
+                        Disk_Hardware = Disks[1, 0];
                     }
                 }
+                Disk_Load_Value = Highest_Disk_Usage.ToString();
             }
             catch (Exception)
             {
@@ -240,23 +243,10 @@ namespace Hardware_Monitor
             var url = connectionString;
 
             Program Monitoring = new Program();
-            string host = System.Net.Dns.GetHostName();
-            //IPHostEntry ip = System.Net.Dns.GetHostEntry(host);               // Getting ip address using host name
-            //string IP_Address = null;                                         // used to make the IP_Address visible outside the for loop.
+            string host = System.Net.Dns.GetHostName();                                       // used to make the IP_Address visible outside the for loop.
             string IP_Address = GetIP4Address(host);
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    Console.WriteLine(ip.AddressList[i].ToString());
-            //    Match match = Regex.Match(ip.AddressList[i].ToString(), @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"); //This is to fing the IPV4 address inside the ip.AddressList[]
-            //    if (match.Success)
-            //    {
-            //        //Console.WriteLine("IP Address = " + match.Value);
-            //        IP_Address = ip.AddressList[i].ToString();
-            //    }
-            //}            
             string mac_Address = getMAC_Address(IP_Address);
 
-            // Getting ip address using host name 
             Console.WriteLine("\t Host name: {0}", host);
             Console.WriteLine("\t IP Address: {0}", IP_Address);
             Console.WriteLine("\t MAC Address: {0}", mac_Address);
@@ -286,7 +276,8 @@ namespace Hardware_Monitor
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", CPU_Temprature_Avg);
-                        Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", Momory_Load_Average);
+                        Console.WriteLine("\t{0}, value:  {1}", "Memory Utilization", Momory_Load_Average);
+                        //Console.WriteLine("\t{0}, value:  {1}", "Disk Utilization", Highest_Disk_Usage);
                         //Console.WriteLine("CPU Temperatura = " + CPU_Temprature_Avg);
                         var client = new MongoClient(url);
                         var db = client.GetDatabase("System_Events_Monitor");
@@ -306,7 +297,7 @@ namespace Hardware_Monitor
                                 CPU_Load_Value = Monitoring.CPU_Load_value,
                                 Memory_Load_Event = Monitoring.Memory_Load,
                                 Memory_Load_Value = Monitoring.Memory_Load_Value,
-                                Disk_Load_Event = Monitoring.Disk_Hardware,
+                                Disk_Hardware = Monitoring.Disk_Hardware,
                                 Disk_Load_Value = Monitoring.Disk_Load_Value,
                                 UTC_TimeStamp = DateTime.UtcNow,
                             }
@@ -321,6 +312,7 @@ namespace Hardware_Monitor
                     Count = 0;
                     CPU_Temprature_Sum = 0;
                     CPU_Load_Sum = 0;
+                    Momory_Load_Sum = 0;
                 }
             }
 

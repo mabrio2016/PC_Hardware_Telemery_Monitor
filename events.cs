@@ -21,7 +21,7 @@ namespace HardwareMonitor
         public string CPU_Load_Value { get; set; }
         public string Memory_Load_Event { get; set; }
         public string Memory_Load_Value { get; set; }
-        public string Disk_Load_Event { get; set; }
+        public string Disk_Hardware { get; set; }
         public string Disk_Load_Value { get; set; }
         //public DateTime Local_TimeStamp { get; set; }
         public DateTime UTC_TimeStamp { get; set; }
