@@ -28,13 +28,13 @@ namespace Hardware_Monitor
         string Manufacturer_Model;
         string CPU_Model;
         string CPU_Temperatura;
-        string CPU_Temperatura_value;
+        int CPU_Temperatura_value;
         string CPU_Load;
-        string CPU_Load_value;
+        int CPU_Load_value;
         string Memory_Load;
-        string Memory_Load_Value;
+        int Memory_Load_Value;
         string Disk_Hardware;
-        string Disk_Load_Value;
+        int Disk_Load_Value;
         string[,] Disks = { { "", "" }, { "", "" }, { "", "" } };
         int disk_Nbr = 0;
         //DateTime localDateTime = DateTime.Now;
@@ -114,45 +114,43 @@ namespace Hardware_Monitor
                     if (sensor.SensorType == SensorType.Temperature && sensor.Name == "Core Average")
                     {
                         CPU_Temperatura = sensor.Name.ToString() + "Temperature in Celsius";
-                        CPU_Temperatura_value = sensor.Value.ToString();
+                        CPU_Temperatura_value = (int)sensor.Value; //(float)sensor.Value;
                     }
                     if (sensor.SensorType == SensorType.Load && sensor.Name == "CPU Total")
                     {
                         CPU_Load = sensor.Name.ToString();
-                        CPU_Load_value = sensor.Value.ToString();
+                        CPU_Load_value = (int)sensor.Value;
                     }
                     if (sensor.SensorType == SensorType.Load && sensor.Name == "Memory")
                     {
                         Memory_Load = sensor.Name.ToString();
-                        Memory_Load_Value = sensor.Value.ToString();
+                        Memory_Load_Value = (int)sensor.Value;
                     }
                     if (hardware.HardwareType == HardwareType.Storage && sensor.SensorType == SensorType.Load && sensor.Name == "Used Space")
                     {
-                        int count = 0;
-                        int flag = 0;
                         string temp_Disk_Hardware = "";
-                        string temo_Disk_Load_Value = "";
+                        string temp_Disk_Load_Value = "";
                         foreach (IHardware DSK_hardware in computer.Hardware)
                         {
                             if (DSK_hardware != null && DSK_hardware.HardwareType == HardwareType.Storage)
                             {
                                 Disk_Hardware = hardware.Name.ToString();
-                                Disk_Load_Value = sensor.Value.ToString();
+                                Disk_Load_Value = (int)sensor.Value;
                                 if (Disk_Hardware != temp_Disk_Hardware && disk_Nbr == 0)
                                 {
                                     Disks[0, 0] = Disk_Hardware;
-                                    Disks[0, 1] = Disk_Load_Value;
+                                    Disks[0, 1] = Disk_Load_Value.ToString();
                                     temp_Disk_Hardware = Disk_Hardware;
-                                    temo_Disk_Load_Value = Disk_Load_Value;
+                                    temp_Disk_Load_Value = Disk_Load_Value.ToString();
                                     disk_Nbr++;
                                     //Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
                                 }
                                 if (Disk_Hardware != temp_Disk_Hardware)
                                 {
                                     Disks[disk_Nbr, 0] = Disk_Hardware;
-                                    Disks[disk_Nbr, 1] = Disk_Load_Value;
+                                    Disks[disk_Nbr, 1] = Disk_Load_Value.ToString();
                                     temp_Disk_Hardware = Disk_Hardware;
-                                    temo_Disk_Load_Value = Disk_Load_Value;
+                                    temp_Disk_Load_Value = Disk_Load_Value.ToString();
                                     disk_Nbr++;
                                     //Console.WriteLine("\t{0} {1}, {2} : {3}", sensor.SensorType, hardware.Name.ToString(), sensor.Name, sensor.Value.ToString());
                                 }
@@ -164,17 +162,17 @@ namespace Hardware_Monitor
             }
             try
             {
-                float Highest_Disk_Usage = float.Parse(Disks[0, 1]);
+                int Highest_Disk_Usage = int.Parse(Disks[0, 1]);
                 Disk_Hardware = Disks[0, 0];
                 for (int i = 1; i < Disks.GetLength(1); i++)
                 {
-                    if (float.Parse(Disks[1, 1]) > Highest_Disk_Usage)
+                    if (int.Parse(Disks[1, 1]) > Highest_Disk_Usage)
                     {
-                        Highest_Disk_Usage = float.Parse(Disks[1, 1]);
+                        Highest_Disk_Usage = int.Parse(Disks[1, 1]);
                         Disk_Hardware = Disks[1, 0];
                     }
                 }
-                Disk_Load_Value = Highest_Disk_Usage.ToString();
+                Disk_Load_Value = Highest_Disk_Usage;
             }
             catch (Exception)
             {
@@ -229,12 +227,12 @@ namespace Hardware_Monitor
         static void Main(string[] args)
         {
             int Count = 0;
-            float CPU_Temprature_Avg = 0;
-            float CPU_Load_AVG = 0;
-            float CPU_Temprature_Sum = 0;
-            float CPU_Load_Sum = 0;
-            float Memory_Load_Average = 0;
-            float Memory_Load_Sum = 0;
+            Decimal CPU_Temprature_Avg = 0;
+            Decimal CPU_Load_AVG = 0;
+            Decimal CPU_Temprature_Sum = 0;
+            Decimal CPU_Load_Sum = 0;
+            Decimal Memory_Load_Average = 0;
+            Decimal Memory_Load_Sum = 0;
 
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("secrets.json");
@@ -259,20 +257,20 @@ namespace Hardware_Monitor
                 Monitoring.Monitor();
 
                 Count++;
-                float CPU_Temprature = float.Parse(Monitoring.CPU_Temperatura_value);
+                int CPU_Temprature = Monitoring.CPU_Temperatura_value;
                 CPU_Temprature_Sum = CPU_Temprature_Sum + CPU_Temprature;
-                float CPU_Load = float.Parse(Monitoring.CPU_Load_value);
+                decimal CPU_Load = Monitoring.CPU_Load_value;
                 CPU_Load_Sum = CPU_Load_Sum + CPU_Load;
-                float Mem_Load = float.Parse(Monitoring.Memory_Load_Value);
+                decimal Mem_Load = Monitoring.Memory_Load_Value;
                 Memory_Load_Sum = Memory_Load_Sum + Mem_Load;
 
-                if (Count == 10)
+                if (Count == 20)
                 {
-                    CPU_Load_AVG = CPU_Load_Sum / 10;
-                    CPU_Temprature_Avg = CPU_Temprature_Sum / 10;
-                    Memory_Load_Average = Memory_Load_Sum / 10;
+                    CPU_Load_AVG = CPU_Load_Sum / 20;
+                    CPU_Temprature_Avg = CPU_Temprature_Sum / 20;
+                    Memory_Load_Average = Memory_Load_Sum / 20;
                     // Seting the trashold for CPU utilization, temperatura and memory
-                    if (CPU_Temprature_Avg > 60 || CPU_Load_AVG > 55 || Memory_Load_Average > 80 || float.Parse(Monitoring.Disk_Load_Value) > 80)
+                    if (CPU_Temprature_Avg > 65 || CPU_Load_AVG > 68 || Memory_Load_Average > 89 || Monitoring.Disk_Load_Value > 80)
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", CPU_Temprature_Avg);

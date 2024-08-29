@@ -16,13 +16,13 @@ namespace HardwareMonitor
         public string Manufacturer_Model { get; set; }
         public string CPU_Model { get; set; }
         public string CPU_Temp_Event { get; set; }
-        public string CPU_Temp_Value { get; set; }
+        public int CPU_Temp_Value { get; set; }
         public string CPU_Load_Event { get; set; }
-        public string CPU_Load_Value { get; set; }
+        public int CPU_Load_Value { get; set; }
         public string Memory_Load_Event { get; set; }
-        public string Memory_Load_Value { get; set; }
+        public int Memory_Load_Value { get; set; }
         public string Disk_Hardware { get; set; }
-        public string Disk_Load_Value { get; set; }
+        public int Disk_Load_Value { get; set; }
         //public DateTime Local_TimeStamp { get; set; }
         public DateTime UTC_TimeStamp { get; set; }
 
