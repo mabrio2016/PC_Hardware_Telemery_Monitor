@@ -2,3 +2,7 @@ I am currently engaged in the development of an open-source tool designed to cap
 
 The data payload, which includes CPU temperature/utilization, memory utilization, disk utilization, as well as the host name, IP address, and MAC address, is transmitted to MongoDB as indicated below
 ![image](https://github.com/user-attachments/assets/1268d5ef-5a50-47fb-81d0-beeac1f1d562)
+
+I am using Grafana to query the data and dispaly in the dashboard below.
+![image](https://github.com/user-attachments/assets/dd4cc564-68ec-437c-b5ef-0b4e9604076e)
+
