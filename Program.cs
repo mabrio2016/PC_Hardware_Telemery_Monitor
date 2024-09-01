@@ -156,7 +156,7 @@ namespace Hardware_Monitor
                                 }
                             }
                         }
-                        if (disk_Nbr > 2) disk_Nbr = 0;
+                        if (disk_Nbr > 1) disk_Nbr = 0;
                     }
                 }
             }
@@ -270,7 +270,7 @@ namespace Hardware_Monitor
                     CPU_Temprature_Avg = CPU_Temprature_Sum / 20;
                     Memory_Load_Average = Memory_Load_Sum / 20;
                     // Seting the trashold for CPU utilization, temperatura and memory
-                    if (CPU_Temprature_Avg > 65 || CPU_Load_AVG > 68 || Memory_Load_Average > 89 || Monitoring.Disk_Load_Value > 80)
+                    if (CPU_Temprature_Avg > 65 || CPU_Load_AVG > 68 || Memory_Load_Average > 91 || Monitoring.Disk_Load_Value > 80)
                     {
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Utilization", CPU_Load_AVG);
                         Console.WriteLine("\t{0}, value:  {1}", "CPU Temperatura", CPU_Temprature_Avg);
@@ -284,20 +284,20 @@ namespace Hardware_Monitor
                         {
                             new Events
                             {
-                                HostName = host,
-                                IP_Address = IP_Address,
-                                MAC_Address = mac_Address,
-                                Manufacturer_Model =  Monitoring.Manufacturer_Model,
-                                CPU_Model = Monitoring.CPU_Model,
-                                CPU_Temp_Event = Monitoring.CPU_Temperatura,
-                                CPU_Temp_Value = Monitoring.CPU_Temperatura_value,
-                                CPU_Load_Event = Monitoring.CPU_Load,
-                                CPU_Load_Value = Monitoring.CPU_Load_value,
-                                Memory_Load_Event = Monitoring.Memory_Load,
-                                Memory_Load_Value = Monitoring.Memory_Load_Value,
-                                Disk_Hardware = Monitoring.Disk_Hardware,
-                                Disk_Load_Value = Monitoring.Disk_Load_Value,
-                                UTC_TimeStamp = DateTime.UtcNow,
+                                hostName = host,
+                                iP_Address = IP_Address,
+                                mAC_Address = mac_Address,
+                                manufacturer_Model =  Monitoring.Manufacturer_Model,
+                                cPU_Model = Monitoring.CPU_Model,
+                                cPU_Temp_Event = Monitoring.CPU_Temperatura,
+                                cPU_Temp_Value = Monitoring.CPU_Temperatura_value,
+                                cPU_Load_Event = Monitoring.CPU_Load,
+                                cPU_Load_Value = Monitoring.CPU_Load_value,
+                                memory_Load_Event = Monitoring.Memory_Load,
+                                memory_Load_Value = Monitoring.Memory_Load_Value,
+                                disk_Hardware = Monitoring.Disk_Hardware,
+                                disk_Load_Value = Monitoring.Disk_Load_Value,
+                                uTC_TimeStamp = DateTime.UtcNow,
                             }
                         };
                         coll.InsertMany(events);
